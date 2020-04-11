@@ -5,18 +5,21 @@ import machine
 import utime as time
 from ntptime import settime
 import urandom
+from pwm_read import Servo
 
 NETWORKS = {
     'Aperture Science': 'stillalive',
     'ASUS': 'internet',
     'Opendoor Guest': 'opendoorguest116'
 }
+MAX_TIME = 30
+
 
 def connect_to_wifi():
     sta_if = network.WLAN(network.STA_IF)
-    print('connecting to network...')
     sta_if.active(True)
     if not sta_if.isconnected():
+        print('connecting to network...')
         networks = [str(net[0], 'utf8') for net in sta_if.scan()]
         networks = [net for net in networks if net in NETWORKS]
         if len(networks):
@@ -52,6 +55,7 @@ def http_get(url):
         s.close()
     return result
 
+
 def get_bus():
     connect_to_wifi()
     default_prediction = {'prediction': [{'minutes': urandom.getrandbits(4)}]}
@@ -63,32 +67,15 @@ def get_bus():
         return int(predictions[0]['minutes'])
     return int(predictions['minutes'])
 
-def inc(t):
-    servo = machine.PWM(machine.Pin(15), freq=50)
-    servo.duty(115)
-    time.sleep_ms(t)
-    servo.duty(0)
 
 def main():
-    current_pos = 0
-    drift = 0
+    connect_to_wifi()
+    s = Servo(13, 15)
     while True:
         minutes = get_bus()
-        minutes = min(minutes, 12)
+        target_angle = int((min(minutes, MAX_TIME) / MAX_TIME) * 360)
 
-        distance = (current_pos - minutes)
-        if distance < 0:
-             distance += 12
-        
-        inc(80 * distance)
-        
-        print("old current pos " + str(current_pos))
-        current_pos = minutes
-        if current_pos > 12:
-            current_pos = current_pos % 12
-        if current_pos < 0:
-            current_pos += 12
-        print("new data current pos, minutes and distance: " + str((current_pos, minutes, distance)))
-        drift += 1
+        s.set_angle(target_angle)
+
         time.sleep(10)
 

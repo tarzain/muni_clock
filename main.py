@@ -1,3 +1,3 @@
-import bus_client
+import bus_client_v2
 
-bus_client.main()
+bus_client_v2.main()

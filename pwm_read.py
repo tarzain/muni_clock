@@ -45,10 +45,10 @@ class Servo:
         return error
 
     def clockwise(self):
-        self.servo.duty(79)
+        self.servo.duty(80)
 
     def counterclockwise(self):
-        self.servo.duty(74)
+        self.servo.duty(72)
 
     def stop(self):
         self.servo.duty(0)
